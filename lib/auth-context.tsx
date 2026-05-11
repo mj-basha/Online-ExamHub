@@ -85,15 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Seed default admin if not exists
+    // Seed default admin if not exists, or update role if needed
     const users = getStoredUsers()
     const passwords = getStoredPasswords()
     
-    if (!users.some((u) => u.id === DEFAULT_ADMIN.id)) {
+    const existingAdminIndex = users.findIndex((u) => u.id === DEFAULT_ADMIN.id)
+    if (existingAdminIndex === -1) {
+      // Admin doesn't exist, add them
       users.push(DEFAULT_ADMIN)
       passwords[DEFAULT_ADMIN.id] = DEFAULT_ADMIN_PASSWORD
       saveUsers(users)
       savePasswords(passwords)
+    } else if (users[existingAdminIndex].role !== 'admin') {
+      // Admin exists but has wrong role, update it
+      users[existingAdminIndex].role = 'admin'
+      saveUsers(users)
     }
 
     const sessionId = Cookies.get(SESSION_KEY)
