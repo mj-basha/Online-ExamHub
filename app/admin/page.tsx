@@ -63,9 +63,10 @@ export default function AdminPage() {
   // Filter users based on search type
   const filteredUsers = useMemo(() => {
     if (searchType === 'admins') {
-      return allUsers.filter((u) => u.role === 'instructor')
+      return allUsers.filter((u) => u.role === 'admin')
     }
-    return allUsers.filter((u) => u.role === 'student')
+    // Users = students + instructors (non-admin users)
+    return allUsers.filter((u) => u.role === 'student' || u.role === 'instructor')
   }, [allUsers, searchType])
 
   // Search for user when query changes
@@ -89,17 +90,17 @@ export default function AdminPage() {
     setSearchResult(found || null)
   }, [searchQuery, filteredUsers])
 
-  // Redirect if not logged in or not an instructor (admin)
+  // Redirect if not logged in or not an admin
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/auth/login')
     }
-    if (!isLoading && user && user.role !== 'instructor') {
+    if (!isLoading && user && user.role !== 'admin') {
       router.push('/')
     }
   }, [user, isLoading, router])
 
-  if (isLoading || !user || user.role !== 'instructor') {
+  if (isLoading || !user || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -171,13 +172,13 @@ export default function AdminPage() {
                     <SelectItem value="users">
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
-                        <span>Users (Students)</span>
+                        <span>Users</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="admins">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4" />
-                        <span>Admins (Instructors)</span>
+                        <span>Admins</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -193,7 +194,7 @@ export default function AdminPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="searchQuery"
-                    placeholder={`Enter ${searchType === 'admins' ? 'instructor' : 'student'} number or name...`}
+                    placeholder={`Enter ${searchType === 'admins' ? 'admin' : 'user'} number or name...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -236,18 +237,23 @@ export default function AdminPage() {
                           {searchResult.name}
                         </h2>
                         <Badge
-                          variant={searchResult.role === 'instructor' ? 'default' : 'secondary'}
+                          variant={searchResult.role === 'admin' ? 'destructive' : searchResult.role === 'instructor' ? 'default' : 'secondary'}
                           className="w-fit mx-auto sm:mx-0"
                         >
-                          {searchResult.role === 'instructor' ? (
+                          {searchResult.role === 'admin' ? (
+                            <>
+                              <ShieldCheck className="w-3 h-3 mr-1" />
+                              Admin
+                            </>
+                          ) : searchResult.role === 'instructor' ? (
                             <>
                               <BookOpen className="w-3 h-3 mr-1" />
-                              Instructor (Admin)
+                              Instructor
                             </>
                           ) : (
                             <>
                               <GraduationCap className="w-3 h-3 mr-1" />
-                              Student (User)
+                              Student
                             </>
                           )}
                         </Badge>
@@ -272,7 +278,7 @@ export default function AdminPage() {
                     <div className="space-y-2">
                       <Label className="flex items-center gap-1.5 text-muted-foreground">
                         <Hash className="w-4 h-4" />
-                        {searchResult.role === 'instructor' ? 'Instructor' : 'Student'} Number
+                        {searchResult.role === 'admin' ? 'Admin' : searchResult.role === 'instructor' ? 'Instructor' : 'Student'} Number
                       </Label>
                       <p className="text-sm text-foreground py-2 px-3 rounded-md bg-muted font-mono">
                         {searchResult.number}

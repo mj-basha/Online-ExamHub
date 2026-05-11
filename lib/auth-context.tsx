@@ -7,7 +7,7 @@ export interface User {
   id: string
   number: string
   name: string
-  role: 'student' | 'instructor'
+  role: 'student' | 'instructor' | 'admin'
   createdAt: string
   avatar?: string
 }
@@ -25,7 +25,7 @@ interface RegisterData {
   number: string
   password: string
   name: string
-  role: 'student' | 'instructor'
+  role: 'student' | 'instructor' | 'admin'
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -38,7 +38,7 @@ const DEFAULT_ADMIN: User = {
   id: 'admin-mj-001',
   number: 'mj',
   name: 'MJ Admin',
-  role: 'instructor',
+  role: 'admin',
   createdAt: new Date().toISOString(),
 }
 const DEFAULT_ADMIN_PASSWORD = '$dog1234'
