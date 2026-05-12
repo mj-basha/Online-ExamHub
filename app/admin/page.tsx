@@ -106,12 +106,8 @@ export default function AdminPage() {
     const found = filteredUsers.filter((u) => {
       const number = String(u.number || '')
       const name = String(u.name || '').toLowerCase()
-    
-      return (
-       
-        number.includes(query) ||
-        name.includes(query)
-      )
+
+      return number.includes(query) || name.includes(query)
     })
 
     setSearchResults(found)
