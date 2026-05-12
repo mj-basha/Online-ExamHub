@@ -55,16 +55,16 @@ export default function AdminPage() {
   const [searchType, setSearchType] = useState<SearchType>('users')
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [searchResults, setSearchResults] = useState<User[]>([])
-  
+
   // Dialog state
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  
+
   // Edit form state
   const [editName, setEditName] = useState('')
   const [editNumber, setEditNumber] = useState('')
   const [editRole, setEditRole] = useState<User['role']>('student')
-  
+
   // Delete confirmation state
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteError, setDeleteError] = useState('')
@@ -103,12 +103,16 @@ export default function AdminPage() {
 
     const query = searchQuery.toLowerCase().trim()
 
-    const found = filteredUsers.filter(
-      (u) =>
-        u.number.toLowerCase() === query ||
-        u.number.toLowerCase().includes(query) ||
-        u.name.toLowerCase().includes(query)
-    )
+    const found = filteredUsers.filter((u) => {
+      const number = String(u.number || '')
+      const name = String(u.name || '').toLowerCase()
+    
+      return (
+       
+        number.includes(query) ||
+        name.includes(query)
+      )
+    })
 
     setSearchResults(found)
   }, [searchQuery, filteredUsers])
@@ -178,7 +182,7 @@ export default function AdminPage() {
     if (selectedUser.role === 'admin') {
       const passwords = JSON.parse(localStorage.getItem(PASSWORDS_KEY) || '{}')
       const adminPassword = passwords[user?.id || '']
-      
+
       if (deletePassword !== adminPassword) {
         setDeleteError('Incorrect admin password')
         return
@@ -188,12 +192,12 @@ export default function AdminPage() {
     // Delete the user
     const users = allUsers.filter((u) => u.id !== selectedUser.id)
     localStorage.setItem(USERS_KEY, JSON.stringify(users))
-    
+
     // Also remove their password
     const passwords = JSON.parse(localStorage.getItem(PASSWORDS_KEY) || '{}')
     delete passwords[selectedUser.id]
     localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords))
-    
+
     setAllUsers(users)
     closeDialog()
   }
@@ -271,9 +275,7 @@ export default function AdminPage() {
               <Search className="w-4 h-4" />
               Search
             </CardTitle>
-            <CardDescription>
-              Search for users or admins by their number or name
-            </CardDescription>
+            <CardDescription>Search for users or admins by their number or name</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -326,8 +328,7 @@ export default function AdminPage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Searching in {filteredUsers.length}{' '}
-              {searchType === 'admins' ? 'admin(s)' : 'user(s)'}
+              Searching in {filteredUsers.length} {searchType === 'admins' ? 'admin(s)' : 'user(s)'}
             </p>
           </CardContent>
         </Card>
@@ -336,7 +337,9 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              {searchQuery.trim() ? 'Search Results' : `All ${searchType === 'admins' ? 'Admins' : 'Users'}`}
+              {searchQuery.trim()
+                ? 'Search Results'
+                : `All ${searchType === 'admins' ? 'Admins' : 'Users'}`}
             </CardTitle>
             <CardDescription>
               {searchResults.length > 0
@@ -399,10 +402,13 @@ export default function AdminPage() {
                   <AlertCircle className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <p className="text-muted-foreground">
-                  No {searchType === 'admins' ? 'admins' : 'users'} found{searchQuery.trim() ? ` matching "${searchQuery}"` : ''}.
+                  No {searchType === 'admins' ? 'admins' : 'users'} found
+                  {searchQuery.trim() ? ` matching "${searchQuery}"` : ''}.
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {searchQuery.trim() ? 'Try searching with a different term.' : `No ${searchType === 'admins' ? 'admins' : 'users'} have been registered yet.`}
+                  {searchQuery.trim()
+                    ? 'Try searching with a different term.'
+                    : `No ${searchType === 'admins' ? 'admins' : 'users'} have been registered yet.`}
                 </p>
               </div>
             )}
@@ -430,20 +436,25 @@ export default function AdminPage() {
                   {getRoleBadge(selectedUser.role)}
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
                     <Hash className="w-3 h-3" />
-                    {selectedUser.role === 'admin' ? 'Admin' : selectedUser.role === 'instructor' ? 'Instructor' : 'Student'} Number
+                    {selectedUser.role === 'admin'
+                      ? 'Admin'
+                      : selectedUser.role === 'instructor'
+                        ? 'Instructor'
+                        : 'Student'}{' '}
+                    Number
                   </Label>
                   <p className="text-sm py-1.5 px-2 rounded-md bg-muted font-mono">
                     {selectedUser.number}
                   </p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
                     <UserIcon className="w-3 h-3" />
@@ -453,7 +464,7 @@ export default function AdminPage() {
                     {selectedUser.role}
                   </p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
                     <CalendarDays className="w-3 h-3" />
@@ -463,7 +474,7 @@ export default function AdminPage() {
                     {formatDate(selectedUser.createdAt)}
                   </p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Internal User ID</Label>
                   <p className="text-xs text-muted-foreground py-1.5 px-2 rounded-md bg-muted font-mono break-all">
@@ -474,7 +485,9 @@ export default function AdminPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>Close</Button>
+            <Button variant="outline" onClick={closeDialog}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -496,10 +509,12 @@ export default function AdminPage() {
                 </Avatar>
                 <div>
                   <p className="font-medium">{editName || selectedUser.name}</p>
-                  <p className="text-sm text-muted-foreground font-mono">{editNumber || selectedUser.number}</p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    {editNumber || selectedUser.number}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="editName">Full Name</Label>
@@ -510,7 +525,7 @@ export default function AdminPage() {
                     placeholder="Enter name"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="editNumber">Number</Label>
                   <Input
@@ -520,10 +535,13 @@ export default function AdminPage() {
                     placeholder="Enter number"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="editRole">Role</Label>
-                  <Select value={editRole} onValueChange={(value: User['role']) => setEditRole(value)}>
+                  <Select
+                    value={editRole}
+                    onValueChange={(value: User['role']) => setEditRole(value)}
+                  >
                     <SelectTrigger id="editRole">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -553,7 +571,9 @@ export default function AdminPage() {
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancel
+            </Button>
             <Button onClick={handleSaveEdit}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
@@ -563,7 +583,9 @@ export default function AdminPage() {
       <Dialog open={dialogMode === 'delete'} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-destructive">Delete {selectedUser?.role === 'admin' ? 'Admin' : 'User'}</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Delete {selectedUser?.role === 'admin' ? 'Admin' : 'User'}
+            </DialogTitle>
             <DialogDescription>
               {selectedUser?.role === 'admin'
                 ? 'Enter your admin password to confirm deletion of this admin account.'
@@ -583,7 +605,7 @@ export default function AdminPage() {
                   <p className="text-sm text-muted-foreground font-mono">{selectedUser.number}</p>
                 </div>
               </div>
-              
+
               {selectedUser.role === 'admin' && (
                 <div className="space-y-2">
                   <Label htmlFor="deletePassword">Your Admin Password</Label>
@@ -597,15 +619,15 @@ export default function AdminPage() {
                     }}
                     placeholder="Enter your password to confirm"
                   />
-                  {deleteError && (
-                    <p className="text-sm text-destructive">{deleteError}</p>
-                  )}
+                  {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
                 </div>
               )}
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancel
+            </Button>
             <Button variant="destructive" onClick={handleDelete}>
               {selectedUser?.role === 'admin' ? 'Delete Admin' : 'Yes, Delete'}
             </Button>

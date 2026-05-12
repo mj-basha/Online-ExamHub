@@ -13,7 +13,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { GraduationCap, LogOut, Settings, User, LayoutDashboard, Moon, Sun, ShieldCheck } from 'lucide-react'
+import {
+  GraduationCap,
+  LogOut,
+  Settings,
+  User,
+  LayoutDashboard,
+  Moon,
+  Sun,
+  ShieldCheck,
+} from 'lucide-react'
 
 export function Header() {
   const { user, logout } = useAuth()
@@ -52,7 +61,11 @@ export function Header() {
           {user ? (
             <>
               <span className="text-sm text-muted-foreground hidden sm:inline-block">
-                {user.role === 'admin' ? 'Admin' : user.role === 'instructor' ? 'Instructor' : 'Student'}
+                {user.role === 'admin'
+                  ? 'Admin'
+                  : user.role === 'instructor'
+                    ? 'Instructor'
+                    : 'Student'}
               </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

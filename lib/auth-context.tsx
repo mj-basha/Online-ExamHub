@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Seed default admin if not exists, or update role if needed
     const users = getStoredUsers()
     const passwords = getStoredPasswords()
-    
+
     const existingAdminIndex = users.findIndex((u) => u.id === DEFAULT_ADMIN.id)
     if (existingAdminIndex === -1) {
       // Admin doesn't exist, add them
