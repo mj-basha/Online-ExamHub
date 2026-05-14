@@ -72,10 +72,12 @@ export const editUsers = async (updatedUser, originalNumber) => {
     if (wasInAdmins) {
       // Move from admins to users
       await db.query('DELETE FROM admins WHERE user_number = ?', [originalNumber])
-      await db.query(
-        'INSERT INTO users (user_number, name, password, rule) VALUES (?, ?, ?, ?)',
-        [user_number, name, password, rule]
-      )
+      await db.query('INSERT INTO users (user_number, name, password, rule) VALUES (?, ?, ?, ?)', [
+        user_number,
+        name,
+        password,
+        rule,
+      ])
     } else if (wasInUsers) {
       // Just update users
       await db.query(
@@ -84,10 +86,12 @@ export const editUsers = async (updatedUser, originalNumber) => {
       )
     } else {
       // Safety: user didn't exist in either?
-      await db.query(
-        'INSERT INTO users (user_number, name, password, rule) VALUES (?, ?, ?, ?)',
-        [user_number, name, password, rule]
-      )
+      await db.query('INSERT INTO users (user_number, name, password, rule) VALUES (?, ?, ?, ?)', [
+        user_number,
+        name,
+        password,
+        rule,
+      ])
     }
   }
 

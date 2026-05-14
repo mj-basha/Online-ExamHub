@@ -439,7 +439,9 @@ export default function AdminPage() {
                       </Avatar>
                       <div>
                         <p className="font-medium text-foreground">{result.name}</p>
-                        <p className="text-sm text-muted-foreground font-mono">{result.user_number}</p>
+                        <p className="text-sm text-muted-foreground font-mono">
+                          {result.user_number}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -607,10 +609,7 @@ export default function AdminPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="editRole">Role</Label>
-                  <Select
-                    value={editRole}
-                    onValueChange={(value: string) => setEditRole(value)}
-                  >
+                  <Select value={editRole} onValueChange={(value: string) => setEditRole(value)}>
                     <SelectTrigger id="editRole">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -659,7 +658,9 @@ export default function AdminPage() {
               Delete {selectedUser?.rule?.toUpperCase() === 'ADMIN' ? 'Admin' : 'User'}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this {selectedUser?.rule?.toUpperCase() === 'ADMIN' ? 'admin' : 'user'}? This action cannot be undone.
+              Are you sure you want to delete this{' '}
+              {selectedUser?.rule?.toUpperCase() === 'ADMIN' ? 'admin' : 'user'}? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
@@ -672,7 +673,9 @@ export default function AdminPage() {
                 </Avatar>
                 <div>
                   <p className="font-medium">{selectedUser.name}</p>
-                  <p className="text-sm text-muted-foreground font-mono">{selectedUser.user_number}</p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    {selectedUser.user_number}
+                  </p>
                 </div>
               </div>
             </div>
