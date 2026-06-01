@@ -165,27 +165,33 @@ export default function RoomDetailPage() {
     }
   }, [roomId])
 
-  const fetchMessages = useCallback(async (silent = false) => {
-    try {
-      const res = await apiRequest(`/rooms/${roomId}/messages?limit=100`)
-      setMessages(res.data.messages)
-    } catch (err) {
-      if (!silent) {
-        setError(err instanceof Error ? err.message : 'Failed to load messages')
+  const fetchMessages = useCallback(
+    async (silent = false) => {
+      try {
+        const res = await apiRequest(`/rooms/${roomId}/messages?limit=100`)
+        setMessages(res.data.messages)
+      } catch (err) {
+        if (!silent) {
+          setError(err instanceof Error ? err.message : 'Failed to load messages')
+        }
       }
-    }
-  }, [roomId])
+    },
+    [roomId]
+  )
 
-  const fetchFiles = useCallback(async (silent = false) => {
-    try {
-      const res = await apiRequest(`/rooms/${roomId}/files`)
-      setFiles(res.data.files)
-    } catch (err) {
-      if (!silent) {
-        setError(err instanceof Error ? err.message : 'Failed to load files')
+  const fetchFiles = useCallback(
+    async (silent = false) => {
+      try {
+        const res = await apiRequest(`/rooms/${roomId}/files`)
+        setFiles(res.data.files)
+      } catch (err) {
+        if (!silent) {
+          setError(err instanceof Error ? err.message : 'Failed to load files')
+        }
       }
-    }
-  }, [roomId])
+    },
+    [roomId]
+  )
 
   // Full Initial Fetch
   const loadAllData = useCallback(async () => {
@@ -277,7 +283,9 @@ export default function RoomDetailPage() {
     try {
       await apiRequest(`/rooms/${roomId}/members/${studentId}`, { method: 'DELETE' })
       setMembers((prev) => prev.filter((m) => m.user_id !== studentId))
-      setRoom((prev) => prev ? { ...prev, member_count: Math.max((prev.member_count || 1) - 1, 1) } : null)
+      setRoom((prev) =>
+        prev ? { ...prev, member_count: Math.max((prev.member_count || 1) - 1, 1) } : null
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove member')
     }
@@ -317,7 +325,11 @@ export default function RoomDetailPage() {
 
   // Leave Room
   const handleLeaveRoom = async () => {
-    if (!confirm('Are you sure you want to leave this room? You will need the room code to join again if it is private.')) {
+    if (
+      !confirm(
+        'Are you sure you want to leave this room? You will need the room code to join again if it is private.'
+      )
+    ) {
       return
     }
     try {
@@ -330,7 +342,11 @@ export default function RoomDetailPage() {
 
   // Delete Room
   const handleDeleteRoom = async () => {
-    if (!confirm('Are you sure you want to delete this room? This will permanently delete all messages and files uploaded to it.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this room? This will permanently delete all messages and files uploaded to it.'
+      )
+    ) {
       return
     }
     try {
@@ -449,10 +465,7 @@ export default function RoomDetailPage() {
             <AlertCircle className="w-12 h-12 text-destructive mb-4" />
             <h2 className="text-xl font-bold text-foreground">Failed to enter room</h2>
             <p className="text-sm text-muted-foreground mt-2">{error}</p>
-            <Button
-              className="mt-6 gap-2"
-              onClick={() => router.push('/rooms')}
-            >
+            <Button className="mt-6 gap-2" onClick={() => router.push('/rooms')}>
               <ArrowLeft className="w-4 h-4" />
               Back to Rooms
             </Button>
@@ -494,22 +507,14 @@ export default function RoomDetailPage() {
             </Button>
 
             {isOwner && (
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={openSettings}
-              >
+              <Button variant="outline" className="gap-2" onClick={openSettings}>
                 <Settings className="w-4 h-4" />
                 Settings
               </Button>
             )}
 
             {isOwner ? (
-              <Button
-                variant="destructive"
-                className="gap-2"
-                onClick={handleDeleteRoom}
-              >
+              <Button variant="destructive" className="gap-2" onClick={handleDeleteRoom}>
                 <Trash2 className="w-4 h-4" />
                 Delete Room
               </Button>
@@ -533,19 +538,28 @@ export default function RoomDetailPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   {room.visibility === 'private' ? (
-                    <Badge variant="secondary" className="gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                    >
                       <Lock className="w-3 h-3" />
                       Private
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                    >
                       <Globe className="w-3 h-3" />
                       Public
                     </Badge>
                   )}
                   {room.room_code && isOwner && (
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-mono gap-1.5 py-0.5 bg-muted text-foreground">
+                      <Badge
+                        variant="outline"
+                        className="font-mono gap-1.5 py-0.5 bg-muted text-foreground"
+                      >
                         Passcode: {room.room_code}
                       </Badge>
                       <button
@@ -564,25 +578,41 @@ export default function RoomDetailPage() {
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">{room.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Created by <span className="font-semibold text-foreground">{room.teacher_name || 'Instructor'}</span> • Code: {room.teacher_number || 'N/A'}
+                  Created by{' '}
+                  <span className="font-semibold text-foreground">
+                    {room.teacher_name || 'Instructor'}
+                  </span>{' '}
+                  • Code: {room.teacher_number || 'N/A'}
                 </p>
               </div>
 
               <div className="flex gap-6 shrink-0 md:border-l md:pl-6 border-border">
                 <div className="text-center md:text-left">
-                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Members</span>
+                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">
+                    Members
+                  </span>
                   <span className="text-2xl font-extrabold flex items-center gap-1.5 justify-center md:justify-start mt-0.5">
                     <Users className="w-5 h-5 text-primary" />
                     {room.member_count || 1}
-                    {room.capacity ? <span className="text-sm font-normal text-muted-foreground">/{room.capacity}</span> : ''}
+                    {room.capacity ? (
+                      <span className="text-sm font-normal text-muted-foreground">
+                        /{room.capacity}
+                      </span>
+                    ) : (
+                      ''
+                    )}
                   </span>
                 </div>
                 <div className="text-center md:text-left">
-                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Files</span>
+                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">
+                    Files
+                  </span>
                   <span className="text-2xl font-extrabold mt-0.5 block">{files.length}</span>
                 </div>
                 <div className="text-center md:text-left">
-                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Messages</span>
+                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">
+                    Messages
+                  </span>
                   <span className="text-2xl font-extrabold mt-0.5 block">{messages.length}</span>
                 </div>
               </div>
@@ -610,16 +640,28 @@ export default function RoomDetailPage() {
         <div className="flex-1 flex flex-col min-h-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="grid grid-cols-3 max-w-md mb-4 bg-muted/60 p-1 rounded-xl">
-              <TabsTrigger value="messages" className="rounded-lg">Messages</TabsTrigger>
-              <TabsTrigger value="files" className="rounded-lg">Files ({files.length})</TabsTrigger>
-              <TabsTrigger value="members" className="rounded-lg">Members ({members.length + 1})</TabsTrigger>
+              <TabsTrigger value="messages" className="rounded-lg">
+                Messages
+              </TabsTrigger>
+              <TabsTrigger value="files" className="rounded-lg">
+                Files ({files.length})
+              </TabsTrigger>
+              <TabsTrigger value="members" className="rounded-lg">
+                Members ({members.length + 1})
+              </TabsTrigger>
             </TabsList>
 
             {/* MESSAGES TAB CONTENT */}
-            <TabsContent value="messages" className="flex-1 flex flex-col focus-visible:outline-none min-h-[500px]">
+            <TabsContent
+              value="messages"
+              className="flex-1 flex flex-col focus-visible:outline-none min-h-[500px]"
+            >
               <Card className="flex-1 flex flex-col overflow-hidden border-border bg-card/45 shadow-inner">
                 {/* Chat window */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 max-h-[500px]" ref={scrollAreaRef}>
+                <div
+                  className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 max-h-[500px]"
+                  ref={scrollAreaRef}
+                >
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center py-20 text-muted-foreground">
                       <Clock className="w-12 h-12 mb-3 opacity-30 stroke-[1.5]" />
@@ -633,7 +675,8 @@ export default function RoomDetailPage() {
                   ) : (
                     <div className="space-y-4">
                       {messages.map((msg, index) => {
-                        const isPrevSenderSame = index > 0 && messages[index - 1].sender_id === msg.sender_id
+                        const isPrevSenderSame =
+                          index > 0 && messages[index - 1].sender_id === msg.sender_id
                         const formattedTime = new Date(msg.created_at).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -771,7 +814,9 @@ export default function RoomDetailPage() {
                           <>
                             <Loader2 className="w-10 h-10 text-primary animate-spin mb-1" />
                             <p className="font-semibold text-sm">Uploading file to room...</p>
-                            <p className="text-xs text-muted-foreground">Please wait while the transfer completes</p>
+                            <p className="text-xs text-muted-foreground">
+                              Please wait while the transfer completes
+                            </p>
                           </>
                         ) : (
                           <>
@@ -820,7 +865,8 @@ export default function RoomDetailPage() {
                                 {file.file_name}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                {formatBytes(file.file_size)} • by {file.uploader_name} • {timeAgo(file.uploaded_at)}
+                                {formatBytes(file.file_size)} • by {file.uploader_name} •{' '}
+                                {timeAgo(file.uploaded_at)}
                               </p>
                             </div>
                           </div>
@@ -863,7 +909,10 @@ export default function RoomDetailPage() {
             </TabsContent>
 
             {/* MEMBERS TAB CONTENT */}
-            <TabsContent value="members" className="flex-1 focus-visible:outline-none min-h-[500px]">
+            <TabsContent
+              value="members"
+              className="flex-1 focus-visible:outline-none min-h-[500px]"
+            >
               <Card className="border-border shadow-md">
                 <CardHeader>
                   <CardTitle className="text-lg">Room Members</CardTitle>
@@ -874,7 +923,9 @@ export default function RoomDetailPage() {
                 <CardContent className="space-y-6">
                   {/* Instructor Section */}
                   <div>
-                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Instructor</h3>
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                      Instructor
+                    </h3>
                     <div className="flex items-center justify-between p-4 bg-primary/5 hover:bg-primary/10 transition-colors border border-primary/20 rounded-xl shadow-sm">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10 border border-primary/30 shadow-sm">
@@ -883,8 +934,12 @@ export default function RoomDetailPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-bold text-sm text-foreground">{room.teacher_name || 'Room Creator'}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">ID: {room.teacher_number || 'N/A'}</p>
+                          <p className="font-bold text-sm text-foreground">
+                            {room.teacher_name || 'Room Creator'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            ID: {room.teacher_number || 'N/A'}
+                          </p>
                         </div>
                       </div>
                       <Badge className="bg-primary text-primary-foreground hover:bg-primary border-none text-[10px] font-bold px-2 py-0.5">
@@ -904,7 +959,8 @@ export default function RoomDetailPage() {
                         <Users className="w-10 h-10 mx-auto mb-3 opacity-30 stroke-[1.5]" />
                         <p className="font-semibold text-sm">No students joined yet</p>
                         <p className="text-xs mt-1">
-                          Share the room {room.visibility === 'private' ? 'passcode' : 'link'} with your students to join.
+                          Share the room {room.visibility === 'private' ? 'passcode' : 'link'} with
+                          your students to join.
                         </p>
                       </div>
                     ) : (
@@ -921,8 +977,12 @@ export default function RoomDetailPage() {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="font-semibold text-sm text-foreground">{member.name}</p>
-                                <p className="text-xs text-muted-foreground">ID: {member.user_number}</p>
+                                <p className="font-semibold text-sm text-foreground">
+                                  {member.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  ID: {member.user_number}
+                                </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -1017,7 +1077,9 @@ export default function RoomDetailPage() {
               <div className="space-y-2">
                 <Label htmlFor="editRoomCapacity">
                   Capacity / Member Limit{' '}
-                  <span className="text-muted-foreground font-normal">(leave empty for unlimited)</span>
+                  <span className="text-muted-foreground font-normal">
+                    (leave empty for unlimited)
+                  </span>
                 </Label>
                 <Input
                   id="editRoomCapacity"

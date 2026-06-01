@@ -250,9 +250,7 @@ export default function RoomsPage() {
   // ─── Room card renderer ───────────────────────────────────────────────
   const renderRoomCard = (room: Room, isOwnerView = false) => {
     const isCardOwner = room.teacher_id === Number(user?.id)
-    const fill = room.capacity
-      ? Math.round(((room.member_count || 0) / room.capacity) * 100)
-      : null
+    const fill = room.capacity ? Math.round(((room.member_count || 0) / room.capacity) * 100) : null
 
     return (
       <Card
@@ -333,9 +331,7 @@ export default function RoomsPage() {
               </div>
             )}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              {!isOwnerView && room.teacher_name && (
-                <span>by {room.teacher_name}</span>
-              )}
+              {!isOwnerView && room.teacher_name && <span>by {room.teacher_name}</span>}
               <span className="flex items-center gap-1 ml-auto">
                 <Clock className="w-3 h-3" />
                 {timeAgo(room.created_at)}
@@ -343,10 +339,7 @@ export default function RoomsPage() {
             </div>
           </div>
           {isOwnerView || room.is_member || isCardOwner ? (
-            <Button
-              className="w-full gap-2"
-              onClick={() => handleEnterRoom(room.room_id)}
-            >
+            <Button className="w-full gap-2" onClick={() => handleEnterRoom(room.room_id)}>
               <DoorOpen className="w-4 h-4" />
               Enter Room
             </Button>
@@ -447,8 +440,7 @@ export default function RoomsPage() {
                   )}
                   <div className="space-y-2">
                     <Label htmlFor="createRoomCapacity">
-                      Capacity{' '}
-                      <span className="text-muted-foreground font-normal">(optional)</span>
+                      Capacity <span className="text-muted-foreground font-normal">(optional)</span>
                     </Label>
                     <Input
                       id="createRoomCapacity"
@@ -464,10 +456,7 @@ export default function RoomsPage() {
                   <Button variant="outline" onClick={() => setCreateOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleCreateRoom}
-                    disabled={!createName.trim() || creating}
-                  >
+                  <Button onClick={handleCreateRoom} disabled={!createName.trim() || creating}>
                     {creating ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -487,10 +476,7 @@ export default function RoomsPage() {
         {error && (
           <div className="mb-6 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
             {error}
-            <button
-              className="ml-2 underline hover:no-underline"
-              onClick={() => setError('')}
-            >
+            <button className="ml-2 underline hover:no-underline" onClick={() => setError('')}>
               Dismiss
             </button>
           </div>
@@ -549,7 +535,8 @@ export default function RoomsPage() {
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl text-primary flex items-center justify-between gap-4">
               <span className="text-sm font-semibold">
-                🛡️ You are viewing the dashboard as an Admin. You have bypass access to all rooms and passcode copy/delete privileges.
+                🛡️ You are viewing the dashboard as an Admin. You have bypass access to all rooms
+                and passcode copy/delete privileges.
               </span>
             </div>
             {filteredAll.length === 0 ? (
