@@ -1,0 +1,24 @@
+{
+  "name": "online-examhub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Online ExamHub - a modern web-based online examination platform",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "start": "npm run start --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend",
+    "typecheck": "npm run typecheck --workspace=frontend",
+    "test": "npm run test --workspace=frontend",
+    "dev:backend": "npm run start --workspace=backend",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
+}
