@@ -14,9 +14,11 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
   ArrowLeft,
+  CheckCircle2,
   FileText,
   Loader2,
   Plus,
+  Send,
   Sparkles,
   Trash2,
   Upload,
@@ -81,6 +83,9 @@ export default function GenerateExamPage() {
   const [fileName, setFileName] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([])
+  const [examCode, setExamCode] = useState('')
+  const [published, setPublished] = useState(false)
+  const [publishError, setPublishError] = useState('')
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
@@ -136,6 +141,19 @@ export default function GenerateExamPage() {
 
   const removeQuestion = (id: string) =>
     setQuestions((prev) => prev.filter((q) => q.id !== id))
+
+  const handlePublish = () => {
+    setPublishError('')
+    if (!examCode.trim()) {
+      setPublishError('Please enter an exam code before publishing.')
+      return
+    }
+    if (questions.length === 0) {
+      setPublishError('Generate at least one question before publishing.')
+      return
+    }
+    setPublished(true)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -348,6 +366,43 @@ export default function GenerateExamPage() {
                     )}
                   </div>
                 ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Publish */}
+          <Card className="h-fit lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Publish exam</CardTitle>
+              <CardDescription>
+                Set an exam code students will use to join, then publish.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="exam-code">Exam code</Label>
+                  <Input
+                    id="exam-code"
+                    placeholder="e.g. MATH-101"
+                    value={examCode}
+                    onChange={(e) => {
+                      setExamCode(e.target.value)
+                      setPublished(false)
+                    }}
+                  />
+                </div>
+                <Button className="gap-2" onClick={handlePublish}>
+                  <Send className="w-4 h-4" />
+                  Publish exam
+                </Button>
+              </div>
+              {publishError && <p className="text-sm text-destructive mt-3">{publishError}</p>}
+              {published && (
+                <p className="text-sm text-primary flex items-center gap-1 mt-3">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Exam published with code {examCode.trim()}.
+                </p>
               )}
             </CardContent>
           </Card>

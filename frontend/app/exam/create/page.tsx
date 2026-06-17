@@ -23,6 +23,7 @@ import {
   CircleHelp,
   ListChecks,
   Plus,
+  Send,
   Sparkles,
   ToggleLeft,
   Trash2,
@@ -49,6 +50,8 @@ export default function CreateExamPage() {
 
   const [questions, setQuestions] = useState<SavedQuestion[]>([])
   const [type, setType] = useState<QuestionType>('true_false')
+  const [examCode, setExamCode] = useState('')
+  const [published, setPublished] = useState(false)
 
   // current true/false draft
   const [tfPrompt, setTfPrompt] = useState('')
@@ -135,6 +138,19 @@ export default function CreateExamPage() {
 
   const removeQuestion = (id: string) =>
     setQuestions((prev) => prev.filter((q) => q.id !== id))
+
+  const handlePublish = () => {
+    setError('')
+    if (!examCode.trim()) {
+      setError('Please enter an exam code before publishing.')
+      return
+    }
+    if (questions.length === 0) {
+      setError('Add at least one question before publishing.')
+      return
+    }
+    setPublished(true)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -366,6 +382,40 @@ export default function CreateExamPage() {
                     )}
                   </div>
                 ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Publish */}
+          <Card className="h-fit lg:col-start-2">
+            <CardHeader>
+              <CardTitle className="text-base">Publish exam</CardTitle>
+              <CardDescription>
+                Set an exam code students will use to join, then publish.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="exam-code">Exam code</Label>
+                <Input
+                  id="exam-code"
+                  placeholder="e.g. MATH-101"
+                  value={examCode}
+                  onChange={(e) => {
+                    setExamCode(e.target.value)
+                    setPublished(false)
+                  }}
+                />
+              </div>
+              <Button className="w-full gap-2" onClick={handlePublish}>
+                <Send className="w-4 h-4" />
+                Publish exam
+              </Button>
+              {published && (
+                <p className="text-sm text-primary flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Exam published with code {examCode.trim()}.
+                </p>
               )}
             </CardContent>
           </Card>
