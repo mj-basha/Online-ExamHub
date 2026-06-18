@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { saveExam } from '@/lib/exam-store'
 import { Header } from '@/components/header'
@@ -18,6 +19,7 @@ import {
   CheckCircle2,
   FileText,
   Loader2,
+  Pencil,
   Plus,
   Send,
   Sparkles,
@@ -401,11 +403,19 @@ export default function GenerateExamPage() {
               </div>
               {publishError && <p className="text-sm text-destructive mt-3">{publishError}</p>}
               {published && (
-                <p className="text-sm text-primary flex items-center gap-1 mt-3">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Published! Students can join with code{' '}
-                  <span className="font-semibold">{examCode.trim().toUpperCase()}</span>.
-                </p>
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm text-primary flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Published! Students can join with code{' '}
+                    <span className="font-semibold">{examCode.trim().toUpperCase()}</span>.
+                  </p>
+                  <Button variant="outline" size="sm" className="gap-2" asChild>
+                    <Link href={`/exams/${encodeURIComponent(examCode.trim().toUpperCase())}`}>
+                      <Pencil className="w-4 h-4" />
+                      View &amp; edit questions
+                    </Link>
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

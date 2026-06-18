@@ -63,3 +63,38 @@ export function getExam(code: string): Exam | null {
 export function examExists(code: string): boolean {
   return getExam(code) !== null
 }
+
+/** Returns all published exams, newest first. */
+export function getAllExams(): Exam[] {
+  const all = readAll()
+  return Object.values(all).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
+}
+
+/** Replaces the questions of an existing exam. Returns the updated exam or null. */
+export function updateExamQuestions(code: string, questions: ExamQuestion[]): Exam | null {
+  const all = readAll()
+  const normalized = normalizeCode(code)
+  const existing = all[normalized]
+  if (!existing) return null
+  const updated: Exam = { ...existing, questions }
+  all[normalized] = updated
+  writeAll(all)
+  return updated
+}
+
+/** Deletes an exam by code. Returns true if it existed. */
+export function deleteExam(code: string): boolean {
+  const all = readAll()
+  const normalized = normalizeCode(code)
+  if (!all[normalized]) return false
+  delete all[normalized]
+  writeAll(all)
+  return true
+}
+
+/** Generates a stable-ish unique id for a new question. */
+export function newQuestionId(): string {
+  return `q_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
