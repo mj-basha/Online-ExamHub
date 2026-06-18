@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { saveExam } from '@/lib/exam-store'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -152,6 +153,7 @@ export default function GenerateExamPage() {
       setPublishError('Generate at least one question before publishing.')
       return
     }
+    saveExam(examCode, questions)
     setPublished(true)
   }
 
@@ -401,7 +403,8 @@ export default function GenerateExamPage() {
               {published && (
                 <p className="text-sm text-primary flex items-center gap-1 mt-3">
                   <CheckCircle2 className="w-4 h-4" />
-                  Exam published with code {examCode.trim()}.
+                  Published! Students can join with code{' '}
+                  <span className="font-semibold">{examCode.trim().toUpperCase()}</span>.
                 </p>
               )}
             </CardContent>
