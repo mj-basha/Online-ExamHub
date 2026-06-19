@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation' // added useRouter import here
+import { apiRequest } from '@/lib/api'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -27,15 +28,11 @@ export default function ForgotPasswordPage() {
     setError('')
 
     try {
-      const response = await fetch(
-        'http://localhost:4000/api/users/forgot-password',
+      const data = await apiRequest(
+        '/users/forgot-password',
 
         {
           method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-          },
 
           body: JSON.stringify({
             email,
@@ -43,19 +40,19 @@ export default function ForgotPasswordPage() {
         }
       )
 
-      const data = await response.json()
+      setMessage(data.message)
 
-      if (response.ok) {
-        setMessage(data.message)
-
-        setTimeout(() => {
-          router.push('/auth/reset-password')
-        }, 1000)
+      setTimeout(() => {
+        router.push('/auth/reset-password')
+      }, 1000)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
       } else {
-        setError(data.error)
+        setError('Something went wrong')
       }
-    } catch {
-      setError('Server error')
+
+      setMessage('')
     }
   }
 

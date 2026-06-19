@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
+import { apiRequest } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
 export default function ResetPasswordPage() {
@@ -16,48 +17,49 @@ export default function ResetPasswordPage() {
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  //added message and error state to display feedback to the user
+
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  // function to handle password reset here
+
   const handleResetPassword = async () => {
     if (password !== confirmPassword) {
-      alert('Passwords do not match')
+      setError('Passwords do not match')
+
+      setMessage('')
+
       return
     }
+
     try {
-      const response = await fetch('http://localhost:4000/api/users/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code,
+      const data = await apiRequest(
+        '/users/reset-password',
 
-          password,
-        }),
-      })
-      const data = await response.json()
+        {
+          method: 'POST',
 
-      console.log(response.status)
+          body: JSON.stringify({
+            code,
 
-      console.log(data)
+            password,
+          }),
+        }
+      )
 
-      if (response.ok) {
-        setMessage('Password updated successfully')
+      setMessage(data.message)
 
-        setError('')
+      setError('')
 
-        setTimeout(() => {
-          router.push('/auth/login')
-        }, 2000)
+      setTimeout(() => {
+        router.push('/auth/login')
+      }, 2000)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
       } else {
-        setError(data.error || 'Something went wrong')
-
-        setMessage('')
+        setError('Something went wrong')
       }
-    } catch {
-      setError('Server error')
+
+      setMessage('')
     }
   }
 
@@ -71,6 +73,7 @@ export default function ResetPasswordPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Login
         </Link>
+
         <Card>
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
@@ -78,24 +81,32 @@ export default function ResetPasswordPage() {
                 <GraduationCap className="w-6 h-6 text-primary-foreground" />
               </div>
             </div>
+
             <CardTitle>Reset Password</CardTitle>
+
             <CardDescription>Enter the verification code and create a new password</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Verification Code</Label>
+
               <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
             </div>
+
             <div className="space-y-2">
               <Label>New Password</Label>
+
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Confirm Password</Label>
+
               <Input
                 type="password"
                 value={confirmPassword}
