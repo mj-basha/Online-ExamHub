@@ -18,6 +18,9 @@ import httpStatusText from '../utils/httpStatusText.js'
 import bcrypt from 'bcrypt'
 import db from '../config/db.js' // added db import here for reset password function
 
+import sendEmail from '../utils/sendEmail.js' // for sending verification code email in forgot password function
+import passwordResetTemplate from '../utils/passwordResetTemplate.js' // added a template for password reset email
+
 import { createResetCode, getResetCode, deleteResetCode } from '../models/passwordResetModel.js'
 
 export const fetchAllUsers = asyncWrapper(async (req, res) => {
@@ -42,6 +45,13 @@ export const register = asyncWrapper(async (req, res, next) => {
     const error = new AppError('this user already exists', 400, httpStatusText.FAIL)
     return next(error)
   }
+
+  // added check for existing email to prevent duplicate registrations with the same email address
+  const existingEmail = await getUserByEmail(email)
+  if (existingEmail) {
+    return next(new AppError('This email is already registered', 400, httpStatusText.ERROR))
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10)
   const newUser = await createUser({
     user_number,
@@ -151,12 +161,22 @@ export const forgotPassword = asyncWrapper(async (req, res, next) => {
 
   await createResetCode(user.user_id, verificationCode)
 
-  console.log('Verification code:', verificationCode)
+  await sendEmail(
+    email,
+
+    'ExamHub Password Reset',
+
+    passwordResetTemplate(
+      user.name,
+
+      verificationCode
+    )
+  )
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
 
-    message: 'Verification code generated',
+    message: 'Verification code sent successfully',
   })
 })
 

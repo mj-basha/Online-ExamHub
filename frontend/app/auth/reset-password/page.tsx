@@ -30,6 +30,14 @@ export default function ResetPasswordPage() {
       return
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters')
+
+      setMessage('')
+
+      return
+    }
+
     try {
       const data = await apiRequest(
         '/users/reset-password',
