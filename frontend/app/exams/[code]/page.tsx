@@ -67,7 +67,7 @@ export default function ExamEditorPage() {
             type,
             prompt: '',
             options: ['', '', '', ''],
-            correctIndex: 0,
+            correctIndexes: [],
           }
     setQuestions((prev) => [...prev, base])
   }
@@ -91,10 +91,16 @@ export default function ExamEditorPage() {
       prev.map((q) => {
         if (q.id !== id || !q.options || q.options.length <= 2) return q
         const options = q.options.filter((_, i) => i !== index)
-        let correctIndex = q.correctIndex ?? 0
-        if (index === correctIndex) correctIndex = 0
-        else if (index < correctIndex) correctIndex -= 1
-        return { ...q, options, correctIndex }
+        const correctIndexes =
+        (q.correctIndexes || [])
+          .filter((i) => i !== index)
+          .map((i) => (i > index ? i - 1 : i))
+      
+      return {
+        ...q,
+        options,
+        correctIndexes,
+      }
       })
     )
 
@@ -256,14 +262,19 @@ export default function ExamEditorPage() {
                     <div className="space-y-2">
                       {q.options?.map((opt, i) => (
                         <div key={i} className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name={`correct-${q.id}`}
-                            checked={q.correctIndex === i}
-                            onChange={() => updateQuestion(q.id, { correctIndex: i })}
-                            className="h-4 w-4 accent-primary shrink-0"
-                            aria-label={`Mark option ${i + 1} correct`}
-                          />
+                         <input
+  type="checkbox"
+  checked={(q.correctIndexes || []).includes(i)}
+  onChange={(e) => {
+    const current = q.correctIndexes || []
+
+    updateQuestion(q.id, {
+      correctIndexes: e.target.checked
+        ? [...current, i]
+        : current.filter((x) => x !== i),
+    })
+  }}
+/>
                           <Input
                             placeholder={`Answer ${i + 1}`}
                             value={opt}

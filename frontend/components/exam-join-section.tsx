@@ -27,7 +27,7 @@ export function ExamJoinSection() {
       router.push('/auth/login')
       return
     }
-    router.push('/exam/create')
+    router.push('/exams')
   }
 
   return (
@@ -45,8 +45,16 @@ export function ExamJoinSection() {
           {user?.role === 'instructor' && (
             <Button size="lg" className="w-full sm:w-auto gap-2" onClick={handleCreateExam}>
               <Plus className="h-5 w-5" />
-              Create exam
+              Exams
             </Button>
+            
+          )}
+           {user?.role === 'admin' && (
+            <Button size="lg" className="w-full sm:w-auto gap-2" onClick={handleCreateExam}>
+              <Plus className="h-5 w-5" />
+              Exams
+            </Button>
+            
           )}
           <Button
             size="lg"
@@ -75,6 +83,7 @@ export function ExamJoinSection() {
             </svg>
             Rooms
           </Button>
+          
 
           <div className="flex items-center w-full sm:w-auto">
             <div className="relative flex-1 sm:flex-none">

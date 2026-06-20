@@ -15,6 +15,7 @@ export interface Exam {
   code: string
   questions: ExamQuestion[]
   createdAt: string
+  createdBy?: string
 }
 
 const STORAGE_KEY = 'exam_platform_published_exams'
@@ -40,12 +41,13 @@ function writeAll(exams: Record<string, Exam>) {
 }
 
 /** Publishes (or overwrites) an exam under the given code. */
-export function saveExam(code: string, questions: ExamQuestion[]): Exam {
+export function saveExam(code: string, questions: ExamQuestion[], createdBy: string): Exam {
   const normalized = normalizeCode(code)
   const exam: Exam = {
     code: normalized,
     questions,
     createdAt: new Date().toISOString(),
+    createdBy,
   }
   const all = readAll()
   all[normalized] = exam

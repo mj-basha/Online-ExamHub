@@ -17,7 +17,7 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
 
   const [exam, setExam] = useState<Exam | null>(null)
   const [loaded, setLoaded] = useState(false)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [answers, setAnswers] = useState<Record<string, string[]>>({})
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
@@ -25,19 +25,18 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
     setLoaded(true)
   }, [code])
 
-  const setAnswer = (questionId: string, value: string) =>
-    setAnswers((prev) => ({ ...prev, [questionId]: value }))
+  const setAnswer=(questionId:string,value:string)=>setAnswers(prev=>{const cur=prev[questionId]||[];return {...prev,[questionId]:cur.includes(value)?cur.filter(v=>v!==value):[...cur,value]}})
 
   const isCorrect = (q: Exam['questions'][number]): boolean => {
     const given = answers[q.id]
     if (given === undefined) return false
-    if (q.type === 'true_false') return given === String(q.answerBool)
-    return Number(given) === q.correctIndex
+    if (q.type === 'true_false') return given[0] === String(q.answerBool)
+    const c=q.correctIndexes||[]; return given.length===c.length && given.every(v=>c.includes(Number(v)))
   }
 
   const score = exam ? exam.questions.filter(isCorrect).length : 0
   const total = exam?.questions.length ?? 0
-  const allAnswered = exam ? exam.questions.every((q) => answers[q.id] !== undefined) : false
+  const allAnswered = exam ? exam.questions.every((q) => (answers[q.id]?.length??0)>0) : false
 
   if (loaded && !exam) {
     return (
@@ -117,23 +116,24 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                       ))}
                   </div>
                   <CardDescription>
-                    {q.type === 'true_false' ? 'True / False' : 'Choose the correct answer'}
+                    {q.type === 'true_false' ? 'True / False' : 'Choose one or more correct answers'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {q.type === 'true_false' ? (
                     <RadioGroup
-                      value={answers[q.id] ?? ''}
-                      onValueChange={(v) => setAnswer(q.id, v)}
+                      value={answers[q.id]?.[0] ?? ''}
+                      onValueChange={(v) =>
+                        setAnswers((prev) => ({
+                          ...prev,
+                          [q.id]: [v],
+                        }))
+                      }
                       disabled={submitted}
                       className="flex gap-3"
                     >
                       {['true', 'false'].map((val) => (
-                        <label
-                          key={val}
-                          htmlFor={`${q.id}-${val}`}
-                          className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors flex-1"
-                        >
+                        <label key={val} htmlFor={`${q.id}-${val}`} className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors flex-1">
                           <RadioGroupItem value={val} id={`${q.id}-${val}`} />
                           <span className="font-medium capitalize">{val}</span>
                           {submitted && String(q.answerBool) === val && (
@@ -143,26 +143,22 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                       ))}
                     </RadioGroup>
                   ) : (
-                    <RadioGroup
-                      value={answers[q.id] ?? ''}
-                      onValueChange={(v) => setAnswer(q.id, v)}
-                      disabled={submitted}
-                      className="space-y-2"
-                    >
+                    <div className="space-y-2">
                       {q.options?.map((opt, i) => (
-                        <label
-                          key={i}
-                          htmlFor={`${q.id}-opt-${i}`}
-                          className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
-                        >
-                          <RadioGroupItem value={String(i)} id={`${q.id}-opt-${i}`} />
+                        <label key={i} className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={(answers[q.id] || []).includes(String(i))}
+                            disabled={submitted}
+                            onChange={() => setAnswer(q.id, String(i))}
+                          />
                           <span className="text-sm">{opt}</span>
-                          {submitted && q.correctIndex === i && (
+                          {submitted && q.correctIndexes?.includes(i) && (
                             <CheckCircle2 className="w-4 h-4 text-primary ml-auto" />
                           )}
                         </label>
                       ))}
-                    </RadioGroup>
+                    </div>
                   )}
                   {wrong && (
                     <p className="text-xs text-destructive mt-3">Your answer was incorrect.</p>
