@@ -25,18 +25,26 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
     setLoaded(true)
   }, [code])
 
-  const setAnswer=(questionId:string,value:string)=>setAnswers(prev=>{const cur=prev[questionId]||[];return {...prev,[questionId]:cur.includes(value)?cur.filter(v=>v!==value):[...cur,value]}})
+  const setAnswer = (questionId: string, value: string) =>
+    setAnswers((prev) => {
+      const cur = prev[questionId] || []
+      return {
+        ...prev,
+        [questionId]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value],
+      }
+    })
 
   const isCorrect = (q: Exam['questions'][number]): boolean => {
     const given = answers[q.id]
     if (given === undefined) return false
     if (q.type === 'true_false') return given[0] === String(q.answerBool)
-    const c=q.correctIndexes||[]; return given.length===c.length && given.every(v=>c.includes(Number(v)))
+    const c = q.correctIndexes || []
+    return given.length === c.length && given.every((v) => c.includes(Number(v)))
   }
 
   const score = exam ? exam.questions.filter(isCorrect).length : 0
   const total = exam?.questions.length ?? 0
-  const allAnswered = exam ? exam.questions.every((q) => (answers[q.id]?.length??0)>0) : false
+  const allAnswered = exam ? exam.questions.every((q) => (answers[q.id]?.length ?? 0) > 0) : false
 
   if (loaded && !exam) {
     return (
@@ -116,7 +124,9 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                       ))}
                   </div>
                   <CardDescription>
-                    {q.type === 'true_false' ? 'True / False' : 'Choose one or more correct answers'}
+                    {q.type === 'true_false'
+                      ? 'True / False'
+                      : 'Choose one or more correct answers'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -133,7 +143,11 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                       className="flex gap-3"
                     >
                       {['true', 'false'].map((val) => (
-                        <label key={val} htmlFor={`${q.id}-${val}`} className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors flex-1">
+                        <label
+                          key={val}
+                          htmlFor={`${q.id}-${val}`}
+                          className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors flex-1"
+                        >
                           <RadioGroupItem value={val} id={`${q.id}-${val}`} />
                           <span className="font-medium capitalize">{val}</span>
                           {submitted && String(q.answerBool) === val && (
@@ -145,7 +159,10 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                   ) : (
                     <div className="space-y-2">
                       {q.options?.map((opt, i) => (
-                        <label key={i} className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <label
+                          key={i}
+                          className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
+                        >
                           <input
                             type="checkbox"
                             checked={(answers[q.id] || []).includes(String(i))}

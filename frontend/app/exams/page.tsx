@@ -11,13 +11,9 @@ export default function ExamsPage() {
 
       <Tabs defaultValue="create" className="w-full">
         <TabsList>
-          <TabsTrigger value="create">
-            Create Exam
-          </TabsTrigger>
+          <TabsTrigger value="create">Create Exam</TabsTrigger>
 
-          <TabsTrigger value="my-exams">
-            Exams
-          </TabsTrigger>
+          <TabsTrigger value="my-exams">Exams</TabsTrigger>
         </TabsList>
 
         <TabsContent value="create">

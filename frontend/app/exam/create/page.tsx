@@ -52,7 +52,7 @@ const uid = () => Math.random().toString(36).slice(2, 10)
 export default function CreateExamPage() {
   const { user } = useAuth()
   const router = useRouter()
- 
+
   const [questions, setQuestions] = useState<SavedQuestion[]>([])
   const [type, setType] = useState<QuestionType>('true_false')
   const [examCode, setExamCode] = useState('')
@@ -151,8 +151,8 @@ export default function CreateExamPage() {
       setError('Add at least one question before publishing.')
       return
     }
-    
-    saveExam(examCode, questions, String(user?.number) ||'')
+
+    saveExam(examCode, questions, String(user?.number) || '')
     setPublished(true)
   }
 

@@ -36,19 +36,19 @@ export default function ExamsPage() {
   const [pendingDelete, setPendingDelete] = useState<Exam | null>(null)
 
   const refresh = () => {
-    
     const all = getAllExams()
     console.log('Current user number:', user?.number)
 
-console.log(
-  all.map(exam => ({
-    code: exam.code,
-    createdBy: exam.createdBy,
-    currentUser: user?.number,
-    match: String(exam.createdBy) === String(user?.number),
-   })))
-    if (user?.role === "instructor") {
-      setExams(all.filter((exam) => exam.createdBy ===String(user?.number)))
+    console.log(
+      all.map((exam) => ({
+        code: exam.code,
+        createdBy: exam.createdBy,
+        currentUser: user?.number,
+        match: String(exam.createdBy) === String(user?.number),
+      }))
+    )
+    if (user?.role === 'instructor') {
+      setExams(all.filter((exam) => exam.createdBy === String(user?.number)))
     } else {
       setExams(all)
     }

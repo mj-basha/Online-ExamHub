@@ -91,16 +91,15 @@ export default function ExamEditorPage() {
       prev.map((q) => {
         if (q.id !== id || !q.options || q.options.length <= 2) return q
         const options = q.options.filter((_, i) => i !== index)
-        const correctIndexes =
-        (q.correctIndexes || [])
+        const correctIndexes = (q.correctIndexes || [])
           .filter((i) => i !== index)
           .map((i) => (i > index ? i - 1 : i))
-      
-      return {
-        ...q,
-        options,
-        correctIndexes,
-      }
+
+        return {
+          ...q,
+          options,
+          correctIndexes,
+        }
       })
     )
 
@@ -262,19 +261,19 @@ export default function ExamEditorPage() {
                     <div className="space-y-2">
                       {q.options?.map((opt, i) => (
                         <div key={i} className="flex items-center gap-2">
-                         <input
-  type="checkbox"
-  checked={(q.correctIndexes || []).includes(i)}
-  onChange={(e) => {
-    const current = q.correctIndexes || []
+                          <input
+                            type="checkbox"
+                            checked={(q.correctIndexes || []).includes(i)}
+                            onChange={(e) => {
+                              const current = q.correctIndexes || []
 
-    updateQuestion(q.id, {
-      correctIndexes: e.target.checked
-        ? [...current, i]
-        : current.filter((x) => x !== i),
-    })
-  }}
-/>
+                              updateQuestion(q.id, {
+                                correctIndexes: e.target.checked
+                                  ? [...current, i]
+                                  : current.filter((x) => x !== i),
+                              })
+                            }}
+                          />
                           <Input
                             placeholder={`Answer ${i + 1}`}
                             value={opt}

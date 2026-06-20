@@ -105,8 +105,14 @@ export default function CreateExamContent() {
         setError('Please provide at least two answers.')
         return
       }
-      if (mcCorrect.length===0){ setError('Select at least one correct answer.'); return }
-      if (mcCorrect.some(i=>!filled[i])) { setError('A selected correct answer cannot be empty.'); return }
+      if (mcCorrect.length === 0) {
+        setError('Select at least one correct answer.')
+        return
+      }
+      if (mcCorrect.some((i) => !filled[i])) {
+        setError('A selected correct answer cannot be empty.')
+        return
+      }
       setQuestions((prev) => [
         ...prev,
         {
@@ -115,7 +121,9 @@ export default function CreateExamContent() {
           prompt: mcPrompt.trim(),
           options: filled.filter(Boolean),
           // recompute correct index after removing empty options before it
-          correctIndexes: mcCorrect.map(idx => filled.slice(0, idx + 1).filter(Boolean).length - 1),
+          correctIndexes: mcCorrect.map(
+            (idx) => filled.slice(0, idx + 1).filter(Boolean).length - 1
+          ),
         },
       ])
     }
@@ -127,7 +135,7 @@ export default function CreateExamContent() {
 
   const removeOption = (index: number) => {
     setMcOptions((prev) => prev.filter((_, i) => i !== index))
-    setMcCorrect((prev)=>prev.filter(i=>i!==index).map(i=>i>index?i-1:i))
+    setMcCorrect((prev) => prev.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)))
   }
 
   const updateOption = (index: number, value: string) =>
@@ -145,7 +153,7 @@ export default function CreateExamContent() {
       setError('Add at least one question before publishing.')
       return
     }
-    saveExam(examCode, questions,String(user?.number) ||'')
+    saveExam(examCode, questions, String(user?.number) || '')
     setPublished(true)
   }
 
@@ -266,7 +274,18 @@ export default function CreateExamContent() {
                     <div className="space-y-2">
                       {mcOptions.map((option, index) => (
                         <div key={index} className="flex items-center gap-2">
-                          <input type="checkbox" checked={mcCorrect.includes(index)} onChange={(e)=>setMcCorrect(prev=>e.target.checked?[...prev,index]:prev.filter(i=>i!==index))} id={`mc-${index}`} />
+                          <input
+                            type="checkbox"
+                            checked={mcCorrect.includes(index)}
+                            onChange={(e) =>
+                              setMcCorrect((prev) =>
+                                e.target.checked
+                                  ? [...prev, index]
+                                  : prev.filter((i) => i !== index)
+                              )
+                            }
+                            id={`mc-${index}`}
+                          />
                           <Input
                             placeholder={`Answer ${index + 1}`}
                             value={option}
