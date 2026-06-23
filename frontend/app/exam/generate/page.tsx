@@ -3,8 +3,18 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { saveExam } from '@/lib/exam-store'
+import { saveExam, examExists } from '@/lib/exam-store'
 import { Header } from '@/components/header'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -89,6 +99,7 @@ export default function GenerateExamPage() {
   const [examCode, setExamCode] = useState('')
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState('')
+  const [pendingCode, setPendingCode] = useState<string | null>(null)
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
@@ -154,8 +165,18 @@ export default function GenerateExamPage() {
       setPublishError('Generate at least one question before publishing.')
       return
     }
-    saveExam(examCode, questions)
+    if (examExists(examCode)) {
+      setPendingCode(examCode.trim())
+      return
+    }
+    doPublish()
+  }
+
+  const doPublish = () => {
+    const saved = saveExam(examCode, questions, '')
+    setExamCode(saved.code)
     setPublished(true)
+    setPendingCode(null)
   }
 
   return (
@@ -420,6 +441,25 @@ export default function GenerateExamPage() {
           </Card>
         </div>
       </main>
+
+      {/* Overwrite confirmation dialog */}
+      <AlertDialog open={!!pendingCode} onOpenChange={(open) => !open && setPendingCode(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exam code already exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              An exam with code{' '}
+              <span className="font-mono font-semibold">{pendingCode?.toUpperCase()}</span> already
+              exists. Publishing will replace all its questions with the current set. Do you want to
+              continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingCode(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doPublish}>Replace exam</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

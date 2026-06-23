@@ -42,8 +42,10 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
     return given.length === c.length && given.every((v) => c.includes(Number(v)))
   }
 
-  const score = exam ? exam.questions.filter(isCorrect).length : 0
-  const total = exam?.questions.length ?? 0
+  const score = exam
+    ? exam.questions.filter(isCorrect).reduce((sum, q) => sum + (q.mark ?? 1), 0)
+    : 0
+  const total = exam ? exam.questions.reduce((sum, q) => sum + (q.mark ?? 1), 0) : 0
   const allAnswered = exam ? exam.questions.every((q) => (answers[q.id]?.length ?? 0) > 0) : false
 
   if (loaded && !exam) {

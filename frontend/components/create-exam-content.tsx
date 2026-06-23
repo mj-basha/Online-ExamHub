@@ -4,12 +4,22 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { saveExam } from '@/lib/exam-store'
+import { saveExam, examExists } from '@/lib/exam-store'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   Select,
   SelectContent,
@@ -40,6 +50,7 @@ interface SavedQuestion {
   id: string
   type: QuestionType
   prompt: string
+  mark?: number
   // true/false
   answerBool?: boolean
   // multiple choice
@@ -61,21 +72,33 @@ export default function CreateExamContent() {
   // current true/false draft
   const [tfPrompt, setTfPrompt] = useState('')
   const [tfAnswer, setTfAnswer] = useState<'true' | 'false'>('true')
+  const [tfMark, setTfMark] = useState('1')
 
   // current multiple-choice draft
   const [mcPrompt, setMcPrompt] = useState('')
   const [mcOptions, setMcOptions] = useState<string[]>(['', '', '', ''])
   const [mcCorrect, setMcCorrect] = useState<number[]>([])
+  const [mcMark, setMcMark] = useState('1')
 
   const [error, setError] = useState('')
+
+  // overwrite confirmation
+  const [pendingCode, setPendingCode] = useState<string | null>(null)
 
   const resetDrafts = () => {
     setTfPrompt('')
     setTfAnswer('true')
+    setTfMark('1')
     setMcPrompt('')
     setMcOptions(['', '', '', ''])
     setMcCorrect([])
+    setMcMark('1')
     setError('')
+  }
+
+  const parseMark = (v: string): number | undefined => {
+    const n = parseInt(v, 10)
+    return isNaN(n) || n < 1 ? undefined : n
   }
 
   const handleNext = () => {
@@ -92,6 +115,7 @@ export default function CreateExamContent() {
           id: uid(),
           type: 'true_false',
           prompt: tfPrompt.trim(),
+          mark: parseMark(tfMark),
           answerBool: tfAnswer === 'true',
         },
       ])
@@ -119,8 +143,8 @@ export default function CreateExamContent() {
           id: uid(),
           type: 'multiple_choice',
           prompt: mcPrompt.trim(),
+          mark: parseMark(mcMark),
           options: filled.filter(Boolean),
-          // recompute correct index after removing empty options before it
           correctIndexes: mcCorrect.map(
             (idx) => filled.slice(0, idx + 1).filter(Boolean).length - 1
           ),
@@ -153,8 +177,18 @@ export default function CreateExamContent() {
       setError('Add at least one question before publishing.')
       return
     }
-    saveExam(examCode, questions, String(user?.number) || '')
+    if (examExists(examCode)) {
+      setPendingCode(examCode.trim())
+      return
+    }
+    doPublish()
+  }
+
+  const doPublish = () => {
+    const saved = saveExam(examCode, questions, String(user?.number) || '')
+    setExamCode(saved.code)
     setPublished(true)
+    setPendingCode(null)
   }
 
   return (
@@ -254,6 +288,18 @@ export default function CreateExamContent() {
                       </label>
                     </RadioGroup>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tf-mark">Mark</Label>
+                    <Input
+                      id="tf-mark"
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                      value={tfMark}
+                      onChange={(e) => setTfMark(e.target.value)}
+                      className="w-24"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -318,6 +364,18 @@ export default function CreateExamContent() {
                       Add answer
                     </Button>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mc-mark">Mark</Label>
+                    <Input
+                      id="mc-mark"
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                      value={mcMark}
+                      onChange={(e) => setMcMark(e.target.value)}
+                      className="w-24"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -361,15 +419,20 @@ export default function CreateExamContent() {
                           {q.type === 'true_false' ? 'True / False' : 'Multiple choice'}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => removeQuestion(q.id)}
-                        className="text-muted-foreground hover:text-destructive -mr-1 -mt-1"
-                        aria-label="Remove question"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {q.mark ?? 1} pt
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => removeQuestion(q.id)}
+                          className="text-muted-foreground hover:text-destructive -mr-1 -mt-1"
+                          aria-label="Remove question"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-sm text-foreground mt-2">{q.prompt}</p>
                     {q.type === 'true_false' ? (
@@ -439,7 +502,7 @@ export default function CreateExamContent() {
                   <Button variant="outline" size="sm" className="w-full gap-2" asChild>
                     <Link href={`/exams/${encodeURIComponent(examCode.trim().toUpperCase())}`}>
                       <Pencil className="w-4 h-4" />
-                      View &amp; edit questions
+                      View & edit questions
                     </Link>
                   </Button>
                 </div>
@@ -448,6 +511,25 @@ export default function CreateExamContent() {
           </Card>
         </div>
       </main>
+
+      {/* Overwrite confirmation dialog */}
+      <AlertDialog open={!!pendingCode} onOpenChange={(open) => !open && setPendingCode(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exam code already exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              An exam with code{' '}
+              <span className="font-mono font-semibold">{pendingCode?.toUpperCase()}</span> already
+              exists. Publishing will replace all its questions with the current set. Do you want to
+              continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingCode(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doPublish}>Replace exam</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

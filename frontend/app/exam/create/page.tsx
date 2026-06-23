@@ -2,14 +2,24 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import { saveExam } from '@/lib/exam-store'
+import { useAuth } from '@/lib/auth-context'
+import { saveExam, examExists } from '@/lib/exam-store'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import {
   Select,
   SelectContent,
@@ -40,16 +50,17 @@ interface SavedQuestion {
   id: string
   type: QuestionType
   prompt: string
+  mark?: number
   // true/false
   answerBool?: boolean
   // multiple choice
   options?: string[]
-  correctIndex?: number
+  correctIndexes?: number[]
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
-export default function CreateExamPage() {
+export default function CreateExamContent() {
   const { user } = useAuth()
   const router = useRouter()
 
@@ -61,21 +72,33 @@ export default function CreateExamPage() {
   // current true/false draft
   const [tfPrompt, setTfPrompt] = useState('')
   const [tfAnswer, setTfAnswer] = useState<'true' | 'false'>('true')
+  const [tfMark, setTfMark] = useState('1')
 
   // current multiple-choice draft
   const [mcPrompt, setMcPrompt] = useState('')
   const [mcOptions, setMcOptions] = useState<string[]>(['', '', '', ''])
-  const [mcCorrect, setMcCorrect] = useState<number>(0)
+  const [mcCorrect, setMcCorrect] = useState<number[]>([])
+  const [mcMark, setMcMark] = useState('1')
 
   const [error, setError] = useState('')
+
+  // overwrite confirmation
+  const [pendingCode, setPendingCode] = useState<string | null>(null)
 
   const resetDrafts = () => {
     setTfPrompt('')
     setTfAnswer('true')
+    setTfMark('1')
     setMcPrompt('')
     setMcOptions(['', '', '', ''])
-    setMcCorrect(0)
+    setMcCorrect([])
+    setMcMark('1')
     setError('')
+  }
+
+  const parseMark = (v: string): number | undefined => {
+    const n = parseInt(v, 10)
+    return isNaN(n) || n < 1 ? undefined : n
   }
 
   const handleNext = () => {
@@ -92,6 +115,7 @@ export default function CreateExamPage() {
           id: uid(),
           type: 'true_false',
           prompt: tfPrompt.trim(),
+          mark: parseMark(tfMark),
           answerBool: tfAnswer === 'true',
         },
       ])
@@ -105,8 +129,12 @@ export default function CreateExamPage() {
         setError('Please provide at least two answers.')
         return
       }
-      if (!filled[mcCorrect]) {
-        setError('The selected correct answer cannot be empty.')
+      if (mcCorrect.length === 0) {
+        setError('Select at least one correct answer.')
+        return
+      }
+      if (mcCorrect.some((i) => !filled[i])) {
+        setError('A selected correct answer cannot be empty.')
         return
       }
       setQuestions((prev) => [
@@ -115,9 +143,11 @@ export default function CreateExamPage() {
           id: uid(),
           type: 'multiple_choice',
           prompt: mcPrompt.trim(),
+          mark: parseMark(mcMark),
           options: filled.filter(Boolean),
-          // recompute correct index after removing empty options before it
-          correctIndex: filled.slice(0, mcCorrect + 1).filter(Boolean).length - 1,
+          correctIndexes: mcCorrect.map(
+            (idx) => filled.slice(0, idx + 1).filter(Boolean).length - 1
+          ),
         },
       ])
     }
@@ -129,11 +159,7 @@ export default function CreateExamPage() {
 
   const removeOption = (index: number) => {
     setMcOptions((prev) => prev.filter((_, i) => i !== index))
-    setMcCorrect((prev) => {
-      if (index === prev) return 0
-      if (index < prev) return prev - 1
-      return prev
-    })
+    setMcCorrect((prev) => prev.filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)))
   }
 
   const updateOption = (index: number, value: string) =>
@@ -151,9 +177,18 @@ export default function CreateExamPage() {
       setError('Add at least one question before publishing.')
       return
     }
+    if (examExists(examCode)) {
+      setPendingCode(examCode.trim())
+      return
+    }
+    doPublish()
+  }
 
-    saveExam(examCode, questions, String(user?.number) || '')
+  const doPublish = () => {
+    const saved = saveExam(examCode, questions, String(user?.number) || '')
+    setExamCode(saved.code)
     setPublished(true)
+    setPendingCode(null)
   }
 
   return (
@@ -253,6 +288,18 @@ export default function CreateExamPage() {
                       </label>
                     </RadioGroup>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tf-mark">Mark</Label>
+                    <Input
+                      id="tf-mark"
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                      value={tfMark}
+                      onChange={(e) => setTfMark(e.target.value)}
+                      className="w-24"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -268,16 +315,23 @@ export default function CreateExamPage() {
                   <div className="space-y-2">
                     <Label>Answers</Label>
                     <p className="text-xs text-muted-foreground">
-                      Select the radio button next to the correct answer.
+                      Select one or more correct answers.
                     </p>
-                    <RadioGroup
-                      value={String(mcCorrect)}
-                      onValueChange={(v) => setMcCorrect(Number(v))}
-                      className="space-y-2"
-                    >
+                    <div className="space-y-2">
                       {mcOptions.map((option, index) => (
                         <div key={index} className="flex items-center gap-2">
-                          <RadioGroupItem value={String(index)} id={`mc-${index}`} />
+                          <input
+                            type="checkbox"
+                            checked={mcCorrect.includes(index)}
+                            onChange={(e) =>
+                              setMcCorrect((prev) =>
+                                e.target.checked
+                                  ? [...prev, index]
+                                  : prev.filter((i) => i !== index)
+                              )
+                            }
+                            id={`mc-${index}`}
+                          />
                           <Input
                             placeholder={`Answer ${index + 1}`}
                             value={option}
@@ -298,7 +352,7 @@ export default function CreateExamPage() {
                           )}
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                     <Button
                       type="button"
                       variant="outline"
@@ -309,6 +363,18 @@ export default function CreateExamPage() {
                       <Plus className="w-4 h-4" />
                       Add answer
                     </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mc-mark">Mark</Label>
+                    <Input
+                      id="mc-mark"
+                      type="number"
+                      min={1}
+                      placeholder="1"
+                      value={mcMark}
+                      onChange={(e) => setMcMark(e.target.value)}
+                      className="w-24"
+                    />
                   </div>
                 </div>
               )}
@@ -353,15 +419,20 @@ export default function CreateExamPage() {
                           {q.type === 'true_false' ? 'True / False' : 'Multiple choice'}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => removeQuestion(q.id)}
-                        className="text-muted-foreground hover:text-destructive -mr-1 -mt-1"
-                        aria-label="Remove question"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {q.mark ?? 1} pt
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => removeQuestion(q.id)}
+                          className="text-muted-foreground hover:text-destructive -mr-1 -mt-1"
+                          aria-label="Remove question"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-sm text-foreground mt-2">{q.prompt}</p>
                     {q.type === 'true_false' ? (
@@ -375,12 +446,12 @@ export default function CreateExamPage() {
                           <li
                             key={i}
                             className={`text-xs flex items-center gap-1 ${
-                              i === q.correctIndex
+                              q.correctIndexes?.includes(i)
                                 ? 'text-primary font-medium'
                                 : 'text-muted-foreground'
                             }`}
                           >
-                            {i === q.correctIndex ? (
+                            {q.correctIndexes?.includes(i) ? (
                               <CheckCircle2 className="w-3 h-3" />
                             ) : (
                               <span className="w-3 h-3 inline-block rounded-full border border-border" />
@@ -431,7 +502,7 @@ export default function CreateExamPage() {
                   <Button variant="outline" size="sm" className="w-full gap-2" asChild>
                     <Link href={`/exams/${encodeURIComponent(examCode.trim().toUpperCase())}`}>
                       <Pencil className="w-4 h-4" />
-                      View &amp; edit questions
+                      View & edit questions
                     </Link>
                   </Button>
                 </div>
@@ -440,6 +511,25 @@ export default function CreateExamPage() {
           </Card>
         </div>
       </main>
+
+      {/* Overwrite confirmation dialog */}
+      <AlertDialog open={!!pendingCode} onOpenChange={(open) => !open && setPendingCode(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exam code already exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              An exam with code{' '}
+              <span className="font-mono font-semibold">{pendingCode?.toUpperCase()}</span> already
+              exists. Publishing will replace all its questions with the current set. Do you want to
+              continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingCode(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doPublish}>Replace exam</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

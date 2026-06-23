@@ -4,11 +4,14 @@ export interface ExamQuestion {
   id: string
   type: QuestionType
   prompt: string
+  /** Score awarded for a correct answer. Defaults to 1 if not set. */
+  mark?: number
   // true/false
   answerBool?: boolean
   // multiple choice
   options?: string[]
   correctIndex?: number
+  correctIndexes?: number[]
 }
 
 export interface Exam {
@@ -40,16 +43,21 @@ function writeAll(exams: Record<string, Exam>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(exams))
 }
 
-/** Publishes (or overwrites) an exam under the given code. */
+/**
+ * Publishes (or overwrites) an exam under the given code.
+ * Returns the saved exam.
+ */
 export function saveExam(code: string, questions: ExamQuestion[], createdBy: string): Exam {
   const normalized = normalizeCode(code)
+  const all = readAll()
+  // Ensure every question has a mark
+  const finalQuestions = questions.map((q) => ({ ...q, mark: q.mark ?? 1 }))
   const exam: Exam = {
     code: normalized,
-    questions,
+    questions: finalQuestions,
     createdAt: new Date().toISOString(),
     createdBy,
   }
-  const all = readAll()
   all[normalized] = exam
   writeAll(all)
   return exam
