@@ -260,7 +260,7 @@ export default function ExamEditorPage() {
                     <Label>Answers (select the correct one)</Label>
                     <div className="space-y-2">
                       {q.options?.map((opt, i) => (
-                          <div key={i} className="flex items-center gap-2 flex-wrap">
+                        <div key={i} className="flex items-center gap-2 flex-wrap">
                           <input
                             type="checkbox"
                             checked={(q.correctIndexes || []).includes(i)}
