@@ -27,7 +27,7 @@ import {
   CalendarDays,
 } from 'lucide-react'
 
-export default function ExamsPage() {
+export default function ExamsPage({ showLogo = true }: { showLogo?: boolean } = {}) {
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -91,7 +91,7 @@ export default function ExamsPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header showLogo={showLogo} />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
@@ -101,7 +101,7 @@ export default function ExamsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showLogo={showLogo} />
       <main className="container mx-auto px-4 py-10 max-w-4xl">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">

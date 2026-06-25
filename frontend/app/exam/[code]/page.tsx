@@ -42,10 +42,25 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
     return given.length === c.length && given.every((v) => c.includes(Number(v)))
   }
 
-  const score = exam
-    ? exam.questions.filter(isCorrect).reduce((sum, q) => sum + (q.mark ?? 1), 0)
+  const getQuestionScore = (q: Exam['questions'][number]): number => {
+    if (!isCorrect(q)) return 0
+    // For multiple choice with per-option marks, sum the marks of correct answers
+    if (q.type === 'multiple_choice' && q.optionMarks && q.correctIndexes) {
+      return q.correctIndexes.reduce((sum, idx) => sum + (q.optionMarks?.[idx] ?? 1), 0)
+    }
+    return q.mark ?? 1
+  }
+
+  const score = exam ? exam.questions.reduce((sum, q) => sum + getQuestionScore(q), 0) : 0
+  const total = exam
+    ? exam.questions.reduce((sum, q) => {
+        // For multiple choice with per-option marks, sum all correct answer marks
+        if (q.type === 'multiple_choice' && q.optionMarks && q.correctIndexes) {
+          return sum + q.correctIndexes.reduce((s, idx) => s + (q.optionMarks?.[idx] ?? 1), 0)
+        }
+        return sum + (q.mark ?? 1)
+      }, 0)
     : 0
-  const total = exam ? exam.questions.reduce((sum, q) => sum + (q.mark ?? 1), 0) : 0
   const allAnswered = exam ? exam.questions.every((q) => (answers[q.id]?.length ?? 0) > 0) : false
 
   if (loaded && !exam) {
@@ -129,6 +144,11 @@ export default function TakeExamPage({ params }: { params: Promise<{ code: strin
                     {q.type === 'true_false'
                       ? 'True / False'
                       : 'Choose one or more correct answers'}
+                    {submitted && (
+                      <span className="ml-2 text-xs">
+                        ({q.mark ?? 1} {q.mark === 1 ? 'point' : 'points'})
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

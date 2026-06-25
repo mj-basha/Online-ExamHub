@@ -81,6 +81,15 @@ export default function ExamEditorPage() {
       )
     )
 
+  const updateOptionMark = (id: string, optionIndex: number, mark: number) =>
+    setQuestions((prev) =>
+      prev.map((q) => {
+        if (q.id !== id) return q
+        const optionMarks = { ...(q.optionMarks || {}), [optionIndex]: mark }
+        return { ...q, optionMarks }
+      })
+    )
+
   const addOption = (id: string) =>
     setQuestions((prev) =>
       prev.map((q) => (q.id === id && q.options ? { ...q, options: [...q.options, ''] } : q))
@@ -160,14 +169,7 @@ export default function ExamEditorPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-10 max-w-3xl">
-        <Button variant="ghost" size="sm" className="mb-4 -ml-2" asChild>
-          <Link href="/exams">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            All exams
-          </Link>
-        </Button>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex items-center justify-between gap-3 mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <ListChecks className="w-5 h-5 text-primary-foreground" />
@@ -222,15 +224,33 @@ export default function ExamEditorPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`prompt-${q.id}`}>Question</Label>
-                  <Textarea
-                    id={`prompt-${q.id}`}
-                    placeholder="Enter the question text"
-                    value={q.prompt}
-                    onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })}
-                    rows={2}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-3 space-y-2">
+                    <Label htmlFor={`prompt-${q.id}`}>Question</Label>
+                    <Textarea
+                      id={`prompt-${q.id}`}
+                      placeholder="Enter the question text"
+                      value={q.prompt}
+                      onChange={(e) => updateQuestion(q.id, { prompt: e.target.value })}
+                      rows={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`mark-${q.id}`}>Points</Label>
+                    <Input
+                      id={`mark-${q.id}`}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={q.mark ?? 1}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10)
+                        if (!isNaN(value) && value >= 1) {
+                          updateQuestion(q.id, { mark: value })
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {q.type === 'true_false' ? (
@@ -278,7 +298,24 @@ export default function ExamEditorPage() {
                             placeholder={`Answer ${i + 1}`}
                             value={opt}
                             onChange={(e) => updateOption(q.id, i, e.target.value)}
+                            className="flex-1"
                           />
+                          {(q.correctIndexes || []).includes(i) && (
+                            <Input
+                              type="number"
+                              min="1"
+                              step="1"
+                              placeholder="Points"
+                              value={q.optionMarks?.[i] ?? 1}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value, 10)
+                                if (!isNaN(value) && value >= 1) {
+                                  updateOptionMark(q.id, i, value)
+                                }
+                              }}
+                              className="w-20"
+                            />
+                          )}
                           <Button
                             variant="ghost"
                             size="icon-sm"

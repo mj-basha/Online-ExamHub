@@ -56,11 +56,13 @@ interface SavedQuestion {
   // multiple choice
   options?: string[]
   correctIndexes?: number[]
+  /** Per-option marks for multiple choice questions (index -> mark) */
+  optionMarks?: Record<number, number>
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
-export default function CreateExamContent() {
+export default function CreateExamContent({ showLogo = true }: { showLogo?: boolean } = {}) {
   const { user } = useAuth()
   const router = useRouter()
 
@@ -79,6 +81,7 @@ export default function CreateExamContent() {
   const [mcOptions, setMcOptions] = useState<string[]>(['', '', '', ''])
   const [mcCorrect, setMcCorrect] = useState<number[]>([])
   const [mcMark, setMcMark] = useState('1')
+  const [mcOptionMarks, setMcOptionMarks] = useState<Record<number, number>>({})
 
   const [error, setError] = useState('')
 
@@ -93,6 +96,7 @@ export default function CreateExamContent() {
     setMcOptions(['', '', '', ''])
     setMcCorrect([])
     setMcMark('1')
+    setMcOptionMarks({})
     setError('')
   }
 
@@ -148,6 +152,7 @@ export default function CreateExamContent() {
           correctIndexes: mcCorrect.map(
             (idx) => filled.slice(0, idx + 1).filter(Boolean).length - 1
           ),
+          optionMarks: mcOptionMarks,
         },
       ])
     }
@@ -164,6 +169,10 @@ export default function CreateExamContent() {
 
   const updateOption = (index: number, value: string) =>
     setMcOptions((prev) => prev.map((o, i) => (i === index ? value : o)))
+
+  const updateMcCorrect = (index: number, checked: boolean) => {
+    setMcCorrect((prev) => (checked ? [...prev, index] : prev.filter((i) => i !== index)))
+  }
 
   const removeQuestion = (id: string) => setQuestions((prev) => prev.filter((q) => q.id !== id))
 
@@ -193,7 +202,7 @@ export default function CreateExamContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header showLogo={showLogo} />
       <main className="container mx-auto px-4 py-10 max-w-5xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -323,13 +332,7 @@ export default function CreateExamContent() {
                           <input
                             type="checkbox"
                             checked={mcCorrect.includes(index)}
-                            onChange={(e) =>
-                              setMcCorrect((prev) =>
-                                e.target.checked
-                                  ? [...prev, index]
-                                  : prev.filter((i) => i !== index)
-                              )
-                            }
+                            onChange={(e) => updateMcCorrect(index, e.target.checked)}
                             id={`mc-${index}`}
                           />
                           <Input
@@ -338,6 +341,22 @@ export default function CreateExamContent() {
                             onChange={(e) => updateOption(index, e.target.value)}
                             className="flex-1"
                           />
+                          {mcCorrect.includes(index) && (
+                            <Input
+                              type="number"
+                              min="1"
+                              step="1"
+                              placeholder="Pts"
+                              value={mcOptionMarks[index] || 1}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10)
+                                if (!isNaN(val) && val >= 1) {
+                                  setMcOptionMarks((prev) => ({ ...prev, [index]: val }))
+                                }
+                              }}
+                              className="w-16"
+                            />
+                          )}
                           {mcOptions.length > 2 && (
                             <Button
                               type="button"

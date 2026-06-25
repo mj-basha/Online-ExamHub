@@ -12,6 +12,8 @@ export interface ExamQuestion {
   options?: string[]
   correctIndex?: number
   correctIndexes?: number[]
+  /** Per-option marks for multiple choice questions (index -> mark) */
+  optionMarks?: Record<number, number>
 }
 
 export interface Exam {
@@ -88,7 +90,9 @@ export function updateExamQuestions(code: string, questions: ExamQuestion[]): Ex
   const normalized = normalizeCode(code)
   const existing = all[normalized]
   if (!existing) return null
-  const updated: Exam = { ...existing, questions }
+  // Ensure every question has a mark
+  const finalQuestions = questions.map((q) => ({ ...q, mark: q.mark ?? 1 }))
+  const updated: Exam = { ...existing, questions: finalQuestions }
   all[normalized] = updated
   writeAll(all)
   return updated
